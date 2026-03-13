@@ -1,9 +1,13 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-workdir /app
+WORKDIR /app
 
-copy . .
+COPY requirements.txt .
 
-run pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-cmd ["uvicorn", "main:app", "--host", "0.0.0.0" "--port", "8000"]
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
