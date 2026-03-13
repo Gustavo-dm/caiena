@@ -11,8 +11,8 @@ def build_comment(city, weather_data):
     forecast_text = []
 
     for date, temp in list(weather_data["forecast"].items())[1:6]:
-        date_str = date.strftime("%d/%m")
-        forecast_text.append(f"{round(temp)}°C em {date_str}")
+        
+        forecast_text.append(f"{round(temp)}°C em {date}")
 
     text += ", ".join(forecast_text)
 
