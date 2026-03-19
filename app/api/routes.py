@@ -3,7 +3,7 @@ from app.schemas.weather_schema import WeatherCommentRequest, WeatherCommentResp
 from app.services.weather_service import AsyncWeatherService
 from app.services.gist import GistService
 from app.utils.comment_builder import build_comment
-from app.sdk.openweather_client import AsyncOpenWeatherClient
+from app.sdk.openweather_client import AsyncOpenWeatherClient, InvalidCityError
 from app.config import settings
 
 router = APIRouter()
@@ -41,6 +41,11 @@ async def post_weather_comment(
         return WeatherCommentResponse(
             message="Comment posted successfully",
             comment=comment
+        )
+    except InvalidCityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
         )
     except Exception as e:
         raise HTTPException(

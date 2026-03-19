@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 import pytest
 
 from app.main import app
+from app.sdk.openweather_client import InvalidCityError
 
 client = TestClient(app)
 
@@ -82,3 +83,32 @@ def test_weather_endpoint_service_error(mock_weather):
     )
 
     assert response.status_code >= 400
+
+
+@patch("app.api.routes.AsyncWeatherService.get_weather_summary")
+def test_weather_endpoint_invalid_city_error(mock_weather):
+    """Test weather endpoint with invalid city (returns 400)"""
+    mock_weather.side_effect = InvalidCityError("City '123' not found. Please check the spelling and try again.")
+
+    response = client.post(
+        "/weather-comment",
+        params={"city": "123", "gist_id": "gist123"}
+    )
+
+    assert response.status_code == 400
+    assert "not found" in response.json()["detail"]
+
+
+@patch("app.api.routes.AsyncWeatherService.get_weather_summary")
+def test_weather_endpoint_empty_city(mock_weather):
+    """Test weather endpoint with empty city name"""
+    mock_weather.side_effect = InvalidCityError("City name cannot be empty")
+
+    response = client.post(
+        "/weather-comment",
+        params={"city": "", "gist_id": "gist123"}
+    )
+
+    # Empty string is caught by FastAPI validation before reaching our code
+    # But we test the error handling anyway
+    assert response.status_code in [400, 422]

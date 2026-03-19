@@ -2,6 +2,11 @@ import httpx
 from typing import Dict, Any
 
 
+class InvalidCityError(Exception):
+    """Exception raised when city name is invalid or not found"""
+    pass
+
+
 class AsyncOpenWeatherClient:
     """
     Cliente para integração com OpenWeatherMap API.
@@ -41,7 +46,8 @@ class AsyncOpenWeatherClient:
                 - etc.
 
         Raises:
-            httpx.HTTPError: Se a requisição falhar
+            InvalidCityError: Se a cidade não for encontrada ou for inválida
+            httpx.HTTPError: Se a requisição falhar por outros motivos
 
         Exemplo:
             >>> client = AsyncOpenWeatherClient("your_api_key")
@@ -49,6 +55,13 @@ class AsyncOpenWeatherClient:
             >>> weather["main"]["temp"]
             34.5
         """
+        # Validar cidade
+        if not city or not city.strip():
+            raise InvalidCityError("City name cannot be empty")
+        
+        if len(city.strip()) < 2:
+            raise InvalidCityError("City name must have at least 2 characters")
+        
         url = f"{self.BASE_URL}/weather"
 
         params = {
@@ -60,6 +73,15 @@ class AsyncOpenWeatherClient:
 
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params)
+            
+            # Handle 404 - City not found
+            if response.status_code == 404:
+                raise InvalidCityError(f"City '{city}' not found. Please check the spelling and try again.")
+            
+            # Handle 401 - Invalid API key
+            if response.status_code == 401:
+                raise httpx.HTTPError("Invalid API key. Please check your configuration.")
+            
             response.raise_for_status()  # Levanta exceção se status >= 400
             return response.json()
 
@@ -79,13 +101,21 @@ class AsyncOpenWeatherClient:
                   - etc.
 
         Raises:
-            httpx.HTTPError: Se a requisição falhar
+            InvalidCityError: Se a cidade não for encontrada ou for inválida
+            httpx.HTTPError: Se a requisição falhar por outros motivos
 
         Exemplo:
             >>> forecast = await client.get_forecast("São Paulo")
             >>> len(forecast["list"])  # ~40 entradas (5 dias x ~8 por dia)
             40
         """
+        # Validar cidade
+        if not city or not city.strip():
+            raise InvalidCityError("City name cannot be empty")
+        
+        if len(city.strip()) < 2:
+            raise InvalidCityError("City name must have at least 2 characters")
+        
         url = f"{self.BASE_URL}/forecast"
 
         params = {
@@ -96,5 +126,14 @@ class AsyncOpenWeatherClient:
 
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params)
+            
+            # Handle 404 - City not found
+            if response.status_code == 404:
+                raise InvalidCityError(f"City '{city}' not found. Please check the spelling and try again.")
+            
+            # Handle 401 - Invalid API key
+            if response.status_code == 401:
+                raise httpx.HTTPError("Invalid API key. Please check your configuration.")
+            
             response.raise_for_status()
             return response.json()

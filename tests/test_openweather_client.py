@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 import pytest
 import httpx
 
-from app.sdk.openweather_client import AsyncOpenWeatherClient
+from app.sdk.openweather_client import AsyncOpenWeatherClient, InvalidCityError
 
 
 class TestAsyncOpenWeatherClient:
@@ -151,3 +151,98 @@ class TestAsyncOpenWeatherClient:
             assert call_args[1]["params"]["q"] == "Madrid"
             assert call_args[1]["params"]["appid"] == "my_api_key"
             assert call_args[1]["params"]["units"] == "metric"
+
+    @pytest.mark.asyncio
+    async def test_get_current_weather_invalid_city_empty(self):
+        """Test with empty city name"""
+        client = AsyncOpenWeatherClient("test_key")
+        
+        with pytest.raises(InvalidCityError) as exc_info:
+            await client.get_current_weather("")
+        
+        assert "cannot be empty" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_current_weather_invalid_city_too_short(self):
+        """Test with city name too short"""
+        client = AsyncOpenWeatherClient("test_key")
+        
+        with pytest.raises(InvalidCityError) as exc_info:
+            await client.get_current_weather("a")
+        
+        assert "at least 2 characters" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_current_weather_invalid_city_number(self):
+        """Test with numeric city name like '123'"""
+        # Numeric cities will pass validation but get 404 from API
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.return_value = None
+
+        with patch("app.sdk.openweather_client.httpx.AsyncClient") as mock_client_class:
+            mock_async_client = AsyncMock()
+            mock_async_client.__aenter__ = AsyncMock(return_value=mock_async_client)
+            mock_async_client.__aexit__ = AsyncMock(return_value=None)
+            mock_async_client.get = AsyncMock(return_value=mock_response)
+            mock_client_class.return_value = mock_async_client
+
+            client = AsyncOpenWeatherClient("test_key")
+            
+            with pytest.raises(InvalidCityError) as exc_info:
+                await client.get_current_weather("123")
+            
+            assert "not found" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_current_weather_404_error(self):
+        """Test API 404 response for non-existent city"""
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.return_value = None
+
+        with patch("app.sdk.openweather_client.httpx.AsyncClient") as mock_client_class:
+            mock_async_client = AsyncMock()
+            mock_async_client.__aenter__ = AsyncMock(return_value=mock_async_client)
+            mock_async_client.__aexit__ = AsyncMock(return_value=None)
+            mock_async_client.get = AsyncMock(return_value=mock_response)
+            mock_client_class.return_value = mock_async_client
+
+            client = AsyncOpenWeatherClient("test_key")
+            
+            with pytest.raises(InvalidCityError) as exc_info:
+                await client.get_current_weather("NonExistentCity")
+            
+            assert "not found" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_invalid_city_empty(self):
+        """Test forecast with empty city name"""
+        client = AsyncOpenWeatherClient("test_key")
+        
+        with pytest.raises(InvalidCityError) as exc_info:
+            await client.get_forecast("")
+        
+        assert "cannot be empty" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_invalid_city_number(self):
+        """Test forecast with numeric city name"""
+        # Numeric cities will pass validation but get 404 from API
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.return_value = None
+
+        with patch("app.sdk.openweather_client.httpx.AsyncClient") as mock_client_class:
+            mock_async_client = AsyncMock()
+            mock_async_client.__aenter__ = AsyncMock(return_value=mock_async_client)
+            mock_async_client.__aexit__ = AsyncMock(return_value=None)
+            mock_async_client.get = AsyncMock(return_value=mock_response)
+            mock_client_class.return_value = mock_async_client
+
+            client = AsyncOpenWeatherClient("test_key")
+            
+            with pytest.raises(InvalidCityError) as exc_info:
+                await client.get_forecast("123")
+            
+            assert "not found" in str(exc_info.value)
