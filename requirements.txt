@@ -1,8 +1,8 @@
 fastapi
 uvicorn
-
 httpx
 requests
 PyGithub
 python-dotenv
 pytest
+pytest-asyncio

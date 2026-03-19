@@ -1,8 +1,8 @@
-import requests
+import httpx
 from typing import Dict, Any
 
 
-class OpenWeatherClient:
+class AsyncOpenWeatherClient:
     """
     Cliente para integração com OpenWeatherMap API.
 
@@ -26,7 +26,7 @@ class OpenWeatherClient:
         """
         self.api_key = api_key
 
-    def get_current_weather(self, city: str) -> Dict[str, Any]:
+    async def get_current_weather(self, city: str) -> Dict[str, Any]:
         """
         Obter clima atual de uma cidade.
 
@@ -41,11 +41,11 @@ class OpenWeatherClient:
                 - etc.
 
         Raises:
-            requests.exceptions.HTTPError: Se a requisição falhar
+            httpx.HTTPError: Se a requisição falhar
 
         Exemplo:
-            >>> client = OpenWeatherClient("your_api_key")
-            >>> weather = client.get_current_weather("São Paulo")
+            >>> client = AsyncOpenWeatherClient("your_api_key")
+            >>> weather = await client.get_current_weather("São Paulo")
             >>> weather["main"]["temp"]
             34.5
         """
@@ -58,12 +58,12 @@ class OpenWeatherClient:
             "lang": "pt_br"      # Descrição em português
         }
 
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # Levanta exceção se status >= 400
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()  # Levanta exceção se status >= 400
+            return response.json()
 
-        return response.json()
-
-    def get_forecast(self, city: str) -> Dict[str, Any]:
+    async def get_forecast(self, city: str) -> Dict[str, Any]:
         """
         Obter previsão de 5 dias para uma cidade.
 
@@ -79,10 +79,10 @@ class OpenWeatherClient:
                   - etc.
 
         Raises:
-            requests.exceptions.HTTPError: Se a requisição falhar
+            httpx.HTTPError: Se a requisição falhar
 
         Exemplo:
-            >>> forecast = client.get_forecast("São Paulo")
+            >>> forecast = await client.get_forecast("São Paulo")
             >>> len(forecast["list"])  # ~40 entradas (5 dias x ~8 por dia)
             40
         """
@@ -94,7 +94,7 @@ class OpenWeatherClient:
             "units": "metric"  # Retorna temperatura em Celsius
         }
 
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-
-        return response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            return response.json()

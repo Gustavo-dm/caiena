@@ -5,7 +5,7 @@ router = APIRouter()
 
 
 @router.get("/")
-def index():
+async def index():
 
     return {
         "service": "weather-gist-api",

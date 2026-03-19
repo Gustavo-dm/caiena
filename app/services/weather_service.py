@@ -1,12 +1,12 @@
-import requests
+import asyncio
 from fastapi import HTTPException
 from typing import Dict, Any
-from app.sdk.openweather_client import OpenWeatherClient
+from app.sdk.openweather_client import AsyncOpenWeatherClient
 from app.utils.forecast_parser import calculate_daily_average
 from app.utils.cache_instance import weather_cache
 
 
-class WeatherService:
+class AsyncWeatherService:
     """
     Serviço para obter informações de clima com cache.
 
@@ -20,16 +20,16 @@ class WeatherService:
         client (OpenWeatherClient): Cliente para acessar OpenWeather API
     """
 
-    def __init__(self, client: OpenWeatherClient):
+    def __init__(self, client: AsyncOpenWeatherClient):
         """
         Inicializar serviço de clima.
 
         Args:
-            client (OpenWeatherClient): Cliente configurado com API key
+            client (AsyncOpenWeatherClient): Cliente configurado com API key
         """
         self.client = client
 
-    def get_weather_summary(self, city: str) -> Dict[str, Any]:
+    async def get_weather_summary(self, city: str) -> Dict[str, Any]:
         """
         Obter resumo do clima atual e previsão para uma cidade.
 
@@ -72,9 +72,11 @@ class WeatherService:
         if cached:
             return cached
 
-        # Chamar APIs externas
-        current = self.client.get_current_weather(city)
-        forecast = self.client.get_forecast(city)
+        # Chamar APIs externas em paralelo com asyncio.gather
+        current, forecast = await asyncio.gather(
+            self.client.get_current_weather(city),
+            self.client.get_forecast(city)
+        )
 
         # Extrair temperatura atual e descrição
         current_temp = round(current["main"]["temp"])

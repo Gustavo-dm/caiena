@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status, Query, HTTPException
 from app.schemas.weather_schema import WeatherCommentRequest, WeatherCommentResponse
-from app.services.weather_service import WeatherService
+from app.services.weather_service import AsyncWeatherService
 from app.services.gist import GistService
 from app.utils.comment_builder import build_comment
-from app.sdk.openweather_client import OpenWeatherClient
+from app.sdk.openweather_client import AsyncOpenWeatherClient
 from app.config import settings
 
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
     summary="Post weather comment to GitHub Gist",
     description="Fetches weather data for a city and posts it as a comment to a GitHub Gist"
 )
-def post_weather_comment(
+async def post_weather_comment(
     city: str = Query(..., description="City name", examples="São Paulo"),
     gist_id: str = Query(..., description="GitHub Gist ID", examples="abc123def456")
 ):
@@ -28,10 +28,10 @@ def post_weather_comment(
     Returns a confirmation message with the posted comment text.
     """
     try:
-        client = OpenWeatherClient(settings.OPENWEATHER_API_KEY)
-        weather_service = WeatherService(client)
+        client = AsyncOpenWeatherClient(settings.OPENWEATHER_API_KEY)
+        weather_service = AsyncWeatherService(client)
 
-        weather_data = weather_service.get_weather_summary(city)
+        weather_data = await weather_service.get_weather_summary(city)
 
         comment = build_comment(city, weather_data)
 

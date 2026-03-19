@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 import pytest
 
 from app.main import app
@@ -13,11 +13,11 @@ def test_index():
     assert response.status_code == 200
 
 
-@patch("app.api.routes.WeatherService.get_weather_summary")
+@patch("app.api.routes.AsyncWeatherService.get_weather_summary")
 @patch("app.api.routes.GistService.comment_on_gist")
 def test_weather_endpoint_success(mock_gist, mock_weather):
     """Test successful weather comment endpoint"""
-    # Mock weather data
+    # Mock weather data as AsyncMock since it's async
     mock_weather.return_value = {
         "current_temp": 15,
         "description": "Cloudy",
@@ -37,7 +37,7 @@ def test_weather_endpoint_success(mock_gist, mock_weather):
     assert "comment" in response.json()
 
 
-@patch("app.api.routes.WeatherService.get_weather_summary")
+@patch("app.api.routes.AsyncWeatherService.get_weather_summary")
 def test_weather_endpoint_missing_city(mock_weather):
     """Test weather endpoint with missing city parameter"""
     mock_weather.return_value = {
@@ -54,7 +54,7 @@ def test_weather_endpoint_missing_city(mock_weather):
     assert response.status_code == 422  # Unprocessable Entity
 
 
-@patch("app.api.routes.WeatherService.get_weather_summary")
+@patch("app.api.routes.AsyncWeatherService.get_weather_summary")
 def test_weather_endpoint_missing_gist_id(mock_weather):
     """Test weather endpoint with missing gist_id parameter"""
     mock_weather.return_value = {
@@ -71,7 +71,7 @@ def test_weather_endpoint_missing_gist_id(mock_weather):
     assert response.status_code == 422
 
 
-@patch("app.api.routes.WeatherService.get_weather_summary")
+@patch("app.api.routes.AsyncWeatherService.get_weather_summary")
 def test_weather_endpoint_service_error(mock_weather):
     """Test weather endpoint when service raises exception"""
     mock_weather.side_effect = Exception("API Error")
