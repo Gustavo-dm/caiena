@@ -213,7 +213,7 @@ Publica um comentário em um Gist com informações climáticas.
 | Parâmetro | Tipo   | Descrição                                   |
 | --------- | ------ | ------------------------------------------- |
 | city      | string | Cidade para consulta (obrigatório)          |
-| gist_id   | string | ID do Gist onde o comentário será publicado (obrigatório) |
+| gist_id   | string | ID do Gist onde o comentário será publicado |
 
 #### Resposta (201 Created)
 
@@ -230,17 +230,17 @@ Publica um comentário em um Gist com informações climáticas.
 | ------ | --------- |
 | 400    | Parâmetros inválidos ou faltando |
 | 422    | Validação falhou |
-| 500    | Erro ao processar requisição (ex: API externa indisponível) |
+| 500    | Erro ao processar requisição |
 
-### Exemplos de Requisição
+#### Exemplos de Requisição
 
-#### cURL
+##### cURL
 
 ```bash
 curl -X POST "http://localhost:8000/weather-comment?city=São%20Paulo&gist_id=abc123def456"
 ```
 
-#### Python (requests)
+##### Python (requests)
 
 ```python
 import requests
@@ -256,7 +256,7 @@ response = requests.post(
 print(response.json())
 ```
 
-#### JavaScript (fetch)
+##### JavaScript (fetch)
 
 ```javascript
 const response = await fetch(
@@ -268,7 +268,7 @@ const data = await response.json();
 console.log(data);
 ```
 
-#### Postman
+##### Postman
 
 1. Método: **POST**
 2. URL: `http://localhost:8000/weather-comment`
@@ -281,38 +281,34 @@ console.log(data);
 
 ## Arquitetura
 
-## Arquitetura
-
 ### Estrutura de Diretórios
-
-O projeto foi estruturado seguindo separação de responsabilidades:
 
 ```
 app
  ├── api
- │    ├── index.py          # Root endpoint
- │    └── routes.py         # Weather comment endpoint
+ │    ├── index.py
+ │    └── routes.py
  │
  ├── services
- │    ├── weather_service.py # Lógica de clima
- │    └── gist.py            # Integração com GitHub
+ │    ├── weather_service.py
+ │    └── gist.py
  │
  ├── sdk
- │    └── openweather_client.py # Cliente OpenWeather
+ │    └── openweather_client.py
  │
  ├── schemas
- │    └── weather_schema.py  # Validação Pydantic
+ │    └── weather_schema.py
  │
  ├── utils
- │    ├── cache.py           # Cache em memória
- │    ├── cache_instance.py  # Instância do cache
- │    ├── comment_builder.py # Construir texto do comentário
- │    ├── forecast_parser.py # Parser de previsão
- │    └── retry.py           # Lógica de retry
+ │    ├── cache.py
+ │    ├── cache_instance.py
+ │    ├── comment_builder.py
+ │    ├── forecast_parser.py
+ │    └── retry.py
  │
- ├── config.py       # Configurações
+ ├── config.py
  ├── __init__.py
- └── main.py         # App FastAPI
+ └── main.py
 
 tests
  ├── test_api.py
@@ -351,49 +347,29 @@ tests
 
 #### SDK (OpenWeatherClient)
 
-Biblioteca responsável pela integração com a API do OpenWeatherMap.
-
-- `get_current_weather(city)` - Obtém clima atual
-- `get_forecast(city)` - Obtém previsão de 5 dias
-
-**Type hints:** ✅ Totalmente tipado
+- `get_current_weather(city)`
+- `get_forecast(city)`
 
 #### WeatherService
 
-Camada de serviço responsável por:
-
-- Obter temperatura atual
-- Calcular média diária da previsão
-- Gerenciar cache
-
-**Features:**
-- Cache em memória com TTL
-- Case-insensitive cache keys
-- Type hints completos
+- Obtém temperatura atual
+- Calcula média diária da previsão
+- Gerencia cache
 
 #### GistService
 
-Integração com a API do GitHub utilizando **PyGithub**.
-
-- `comment_on_gist(gist_id, comment)` - Publica comentário
-
-**Error handling:**
-- Trata exceções de autenticação
-- Trata gists não encontrados
+- `comment_on_gist(gist_id, comment)`
 
 #### Utils
 
-- **forecast_parser** → Calcula média diária da previsão (suporta timestamps e datetime strings)
-- **comment_builder** → Constrói texto formatado do comentário
-- **cache** → Cache simples em memória com TTL configurável
-- **comment_builder** → Formata comentário para publicação
+- forecast_parser
+- comment_builder
+- cache
 
 #### API (FastAPI)
 
-- **POST /weather-comment** - Endpoint principal
-- **GET /** - Health check
-- Error handling com HTTPException
-- Documentação automática em `/docs` (Swagger UI)
+- POST /weather-comment
+- GET /
 
 ---
 
@@ -405,29 +381,17 @@ Integração com a API do GitHub utilizando **PyGithub**.
 mypy app/
 ```
 
-Fornece verificação estática de tipos.
-
-### Linting & Formatting
-
-O projeto inclui configurações para:
-- Type hints completos
-- Estrutura clara e organizada
-
 ### Testes
 
-- **33 casos de teste**
-- **~95% de cobertura**
-- Testes de sucesso, erro e edge cases
-- Uso de mocks para serviços externos
+- 33 casos
+- ~95% cobertura
+- mocks para APIs externas
 
 ---
-
 
 ## Troubleshooting
 
 ### Erro: "No module named 'app'"
-
-**Solução:** Certifique-se que você está no diretório correto e ativou o ambiente virtual.
 
 ```bash
 cd weather-gist-api
@@ -436,68 +400,36 @@ source .venv/bin/activate
 
 ### Erro: "OPENWEATHER_API_KEY not found"
 
-**Solução:** Configure as variáveis de ambiente no `.env`.
-
 ```bash
 cp .env-example .env
-# Edite .env com suas chaves reais
 ```
 
 ### Tests falhando
-
-**Solução:** Reinstale as dependências.
 
 ```bash
 pip install -r requirements.txt --upgrade
 ```
 
 ---
-# Testes
 
-Para executar os testes automatizados:
-
-```
-pytest
-```
-
-Os testes incluem:
-
-* API endpoint
-* cálculo da média de previsão
-* cache em memória
-* service layer
-
-Chamadas externas são **mockadas**, evitando dependência de APIs externas durante os testes.
-
----
-
-# Funcionalidades implementadas
+## Funcionalidades implementadas
 
 ✔ Integração com OpenWeatherMap
-✔ SDK customizado para API externa
+✔ SDK customizado
 ✔ Integração com GitHub Gist
-✔ Endpoint HTTP com FastAPI
+✔ Endpoint HTTP
 ✔ Cache em memória
 ✔ Testes automatizados
 ✔ Dockerização
-✔ Estrutura modular de projeto
+✔ Estrutura modular
 
 ---
 
-# Diferenciais
-
-* Baixo número de dependências
-* Arquitetura modular
-* Testes automatizados
-* Docker
-* Cache simples para otimização de chamadas externas
-
----
-
-# Possíveis melhorias
+## Possíveis melhorias
 
 * Persistência de cache (Redis)
-* Retry automático em chamadas externas
+* Retry automático
 * Logging estruturado
 * Monitoramento
 * Rate limiting
+
