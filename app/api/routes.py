@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Query
+from fastapi import APIRouter, status, Query, HTTPException
 from app.schemas.weather_schema import WeatherCommentRequest, WeatherCommentResponse
 from app.services.weather_service import WeatherService
 from app.services.gist import GistService
@@ -27,17 +27,23 @@ def post_weather_comment(
     
     Returns a confirmation message with the posted comment text.
     """
-    client = OpenWeatherClient(settings.OPENWEATHER_API_KEY)
-    weather_service = WeatherService(client)
+    try:
+        client = OpenWeatherClient(settings.OPENWEATHER_API_KEY)
+        weather_service = WeatherService(client)
 
-    weather_data = weather_service.get_weather_summary(city)
+        weather_data = weather_service.get_weather_summary(city)
 
-    comment = build_comment(city, weather_data)
+        comment = build_comment(city, weather_data)
 
-    gist_service = GistService(settings.GITHUB_TOKEN)
-    gist_service.comment_on_gist(gist_id, comment)
+        gist_service = GistService(settings.GITHUB_TOKEN)
+        gist_service.comment_on_gist(gist_id, comment)
 
-    return WeatherCommentResponse(
-        message="Comment posted successfully",
-        comment=comment
-    )
+        return WeatherCommentResponse(
+            message="Comment posted successfully",
+            comment=comment
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing weather comment: {str(e)}"
+        )

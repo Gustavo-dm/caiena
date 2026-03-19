@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
+import pytest
 
 from app.main import app
 
@@ -7,13 +8,15 @@ client = TestClient(app)
 
 
 def test_index():
+    """Test root endpoint"""
     response = client.get("/")
     assert response.status_code == 200
 
 
-@patch("app.services.weather.WeatherService.get_weather_summary")
-@patch("app.services.gist.GistService.comment_on_gist")
-def test_weather_endpoint(mock_gist, mock_weather):
+@patch("app.api.routes.WeatherService.get_weather_summary")
+@patch("app.api.routes.GistService.comment_on_gist")
+def test_weather_endpoint_success(mock_gist, mock_weather):
+    """Test successful weather comment endpoint"""
     # Mock weather data
     mock_weather.return_value = {
         "current_temp": 15,
@@ -31,3 +34,51 @@ def test_weather_endpoint(mock_gist, mock_weather):
 
     assert response.status_code == 201
     assert response.json()["message"] == "Comment posted successfully"
+    assert "comment" in response.json()
+
+
+@patch("app.api.routes.WeatherService.get_weather_summary")
+def test_weather_endpoint_missing_city(mock_weather):
+    """Test weather endpoint with missing city parameter"""
+    mock_weather.return_value = {
+        "current_temp": 15,
+        "description": "Cloudy",
+        "forecast": {}
+    }
+
+    response = client.post(
+        "/weather-comment",
+        params={"gist_id": "123"}
+    )
+
+    assert response.status_code == 422  # Unprocessable Entity
+
+
+@patch("app.api.routes.WeatherService.get_weather_summary")
+def test_weather_endpoint_missing_gist_id(mock_weather):
+    """Test weather endpoint with missing gist_id parameter"""
+    mock_weather.return_value = {
+        "current_temp": 15,
+        "description": "Cloudy",
+        "forecast": {}
+    }
+
+    response = client.post(
+        "/weather-comment",
+        params={"city": "London"}
+    )
+
+    assert response.status_code == 422
+
+
+@patch("app.api.routes.WeatherService.get_weather_summary")
+def test_weather_endpoint_service_error(mock_weather):
+    """Test weather endpoint when service raises exception"""
+    mock_weather.side_effect = Exception("API Error")
+
+    response = client.post(
+        "/weather-comment",
+        params={"city": "London", "gist_id": "123"}
+    )
+
+    assert response.status_code >= 400
