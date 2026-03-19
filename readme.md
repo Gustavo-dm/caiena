@@ -422,18 +422,6 @@ O projeto inclui configurações para:
 
 ---
 
-## Melhorias Futuras
-
-- [ ] Adicionar autenticação JWT
-- [ ] Implementar rate limiting
-- [ ] Usar banco de dados para persistência
-- [ ] Integrar Redis para cache distribuído
-- [ ] Adicionar logging estruturado
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Testes de carga/performance
-- [ ] Suporte a múltiplas cidades em uma requisição
-
----
 
 ## Troubleshooting
 
@@ -464,58 +452,6 @@ pip install -r requirements.txt --upgrade
 ```
 
 ---
-
-## Contribuir
-
-1. Fork o repositório
-2. Crie uma branch (`git checkout -b feature/amazing-feature`)
-3. Commit suas mudanças (`git commit -m 'Add amazing feature'`)
-4. Push para a branch (`git push origin feature/amazing-feature`)
-5. Abra um Pull Request
-
----
-
-## Licença
-
-MIT License
-
----
-
-## Contato
-
-Para dúvidas ou sugestões, entre em contato através de issues no repositório.
-
-```
-POST /weather-comment?city=London&gist_id=123abc
-```
-
-### Resposta
-
-```
-{
-  "status": "comment published",
-  "city": "London"
-}
-```
-
----
-
-# Endpoint de saúde
-
-## GET /
-
-Verifica se a API está ativa.
-
-Resposta:
-
-```
-{
-  "message": "Weather Gist API running"
-}
-```
-
----
-
 # Testes
 
 Para executar os testes automatizados:
